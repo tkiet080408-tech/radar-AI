@@ -65,7 +65,7 @@ pre{white-space:pre-wrap;word-wrap:break-word;background:var(--bg);border:1px so
       <select id="s"><option data-en="Small (under 1 ton)">Nhỏ (dưới 1 tấn)</option><option selected data-en="Medium (1–5 tons)">Vừa (1–5 tấn)</option><option data-en="Large (over 5 tons)">Lớn (trên 5 tấn)</option></select>
       <label for="d" data-en="Your strengths">Điểm mạnh của bạn</label><textarea id="d" rows="3">Giá cạnh tranh, có chứng nhận HACCP, nguồn gốc rõ ràng từ Tây Nguyên</textarea>
       <label for="c" data-en="Chosen customer (for steps 2 and 3)">Khách hàng đã chọn (cho bước 2 và 3)</label><input id="c" placeholder="">
-      <label for="k" data-en="Access code (for live AI)">Mã truy cập (cho AI thật)</label><input id="k" type="password" autocomplete="off">
+      <label for="k" hidden data-en="Access code (for live AI)">Mã truy cập (cho AI thật)</label><input id="k" hidden type="password" autocomplete="off">
     </form>
     <div>
       <div class="modes" id="modes"><button type="button" data-m="demo" data-en="Demo (sample results)">Demo (kết quả mẫu)</button><button type="button" data-m="live" class="ghost" data-en="Live AI (web search)">AI thật (tìm web)</button><button type="button" data-m="prompt" class="ghost" data-en="Prompt builder">Tạo prompt</button></div>
@@ -125,9 +125,10 @@ const SAMPLE=[
 let D=SAMPLE,live=false,err="",S={},lastSug="";
 function el(t,x,c){const e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;return e}
 function btn(x,fn,g){const b=el("button",x,g?"ghost":"");b.type="button";b.onclick=fn;return b}
-U.vi.banL="AI thật: Gemini + Google Search. Kết quả có thể sai, hãy mở nguồn để kiểm chứng. Cần mã truy cập do chủ trang cung cấp.";
-U.en.banL="Live AI: Gemini + Google Search. Results can be wrong, so open the sources to verify. An access code from the site owner is required.";
+U.vi.banL="AI thật: tìm kiếm web kết hợp Gemini. Kết quả có thể sai, hãy mở nguồn để kiểm chứng. Đây là gói miễn phí nên có thể tạm hết lượt.";
+U.en.banL="Live AI: web search plus Gemini. Results can be wrong, so open the sources to verify. This uses free plans, so it may run out of quota.";
 U.vi.err="Lỗi: ";U.en.err="Error: ";U.vi.src="Nguồn tìm thấy";U.en.src="Sources found";
+U.vi.quota="AI thật tạm thời hết lượt miễn phí. Mời dùng chế độ Demo mẫu hoặc thử lại sau.";U.en.quota="Live AI has run out of its free quota for now. Please use the Demo mode or try again later.";
 const g=x=>Array.isArray(x)?x[lang==="en"?1:0]:x;
 async function api(stp,co){
   const r=await fetch("/.netlify/functions/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({step:stp,lang,code:$("k").value,inputs:{product:$("p").value,market:$("m").value,type:$("t").value,size:$("s").value,strengths:$("d").value},company:co})});
@@ -151,7 +152,7 @@ async function run(n){
       S[n]=j.sources;lastSug=j.suggestions;
     }
     st=n;
-  }catch(e){err=e.message}
+  }catch(e){err=/429|quota/i.test(e.message)?U[lang].quota:e.message}
   busy=false;renderDemo();
 }
 function srcs(a){
