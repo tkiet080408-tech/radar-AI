@@ -129,6 +129,7 @@ function btn(x,fn,g){const b=el("button",x,g?"ghost":"");b.type="button";b.oncli
 U.vi.banL="AI thật: tìm kiếm web kết hợp Gemini. Kết quả có thể sai, hãy mở nguồn để kiểm chứng. Đây là gói miễn phí nên có thể tạm hết lượt.";
 U.en.banL="Live AI: web search plus Gemini. Results can be wrong, so open the sources to verify. This uses free plans, so it may run out of quota.";
 U.vi.err="Lỗi: ";U.en.err="Error: ";U.vi.src="Nguồn tìm thấy";U.en.src="Sources found";
+U.vi.none="Chưa tìm thấy công ty phù hợp từ kết quả tìm kiếm. Hãy bấm lại hoặc thử ghi sản phẩm và thị trường rõ hơn.";U.en.none="No suitable companies were found in the search results. Try again or describe the product and market more clearly.";
 U.vi.quota="AI thật tạm thời hết lượt miễn phí. Mời dùng chế độ Demo mẫu hoặc thử lại sau.";U.en.quota="Live AI has run out of its free quota for now. Please use the Demo mode or try again later.";
 const g=x=>Array.isArray(x)?x[lang==="en"?1:0]:x;
 async function api(stp,co){
@@ -143,8 +144,8 @@ async function run(n){
     if(!live){await new Promise(r=>setTimeout(r,700))}
     else if(n===1){
       const j=await api(1);
-      D=(j.data.leads||[]).slice(0,5).map(l=>({n:l.company,c:l.city||"",t:l.type||"",sc:+l.score||0,b:[l.demand,l.match,l.barrier,l.access].map(x=>+x||0),sg:l.signal||"",w:l.why||"",site:l.website||""}));
-      if(!D.length)throw new Error("No companies found.");
+      D=(j.data.leads||j.data.companies||[]).slice(0,5).map(l=>({n:l.company,c:l.city||"",t:l.type||"",sc:+l.score||0,b:[l.demand,l.match,l.barrier,l.access].map(x=>+x||0),sg:l.signal||"",w:l.why||"",site:l.website||""}));
+      if(!D.length)throw new Error(U[lang].none);
       S[1]=j.sources;lastSug=j.suggestions;
     }else{
       const c=D[sel],j=await api(n,{name:c.n,city:c.c,site:c.site}),d=j.data;
