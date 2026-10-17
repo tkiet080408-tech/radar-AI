@@ -59,7 +59,7 @@ exports.handler = async (event) => {
       }),
     });
     const j = await r.json();
-    if (!r.ok) return reply(502, { error: `AI service error (${r.status}).` });
+    if (!r.ok) return reply(502, { error: `AI service error (${r.status}): ${clip((j.error && j.error.message) || "", 300)}` });
     const cand = j.candidates && j.candidates[0];
     const text = ((cand && cand.content && cand.content.parts) || []).map((p) => p.text || "").join("");
     const gm = (cand && cand.groundingMetadata) || {};
