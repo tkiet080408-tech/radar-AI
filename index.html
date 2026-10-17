@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar – Prompt builder</title>
+<style>
+:root{--bg:#e8eeed;--panel:#fff;--ink:#12292c;--mute:#5a7174;--line:#c9d6d5;--acc:#0b7a75;--acc-ink:#fff;--warn:#a86a00;--warn-bg:#fbf0d9}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1b1d;--panel:#16282b;--ink:#e4efee;--mute:#92aeb0;--line:#2b4346;--acc:#3fc4bb;--acc-ink:#062022;--warn:#f0b955;--warn-bg:#2d2411}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 18px;max-width:62ch}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:16px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button{font:inherit;font-weight:500;cursor:pointer;border-radius:6px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-ink);padding:9px 14px}
+button.ghost{background:transparent;color:var(--acc)}
+.lang{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;flex:none}
+.lang svg{width:16px;height:16px}
+.steps{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.steps button{border-radius:99px;font-size:13px;padding:5px 12px}
+pre{white-space:pre-wrap;word-wrap:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:14px/1.55 inherit;margin:0 0 12px}
+.hint{color:var(--mute);font-size:13px;margin:0 0 10px}
+[hidden]{display:none!important}
+.modes{display:flex;gap:6px;margin-bottom:14px}
+.lead{border-top:1px solid var(--line);padding:14px 0}
+.row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.score{font-size:24px;font-weight:700;color:var(--acc);line-height:1}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.bars div{font-size:12px;color:var(--mute)}
+.bars i{display:block;height:6px;border-radius:3px;background:var(--line);margin-top:3px;overflow:hidden}
+.bars u{display:block;height:100%;background:var(--acc)}
+.tag{color:var(--mute);font-size:13px}
+.chk{font-size:13px;color:var(--warn);margin-bottom:8px}
+.sec{margin-top:14px}.sec h3{font-size:14px;margin:0 0 4px}.sec ul{margin:0;padding-left:20px}
+.verdict{display:inline-block;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--acc);color:var(--acc-ink);margin-bottom:8px}
+.email{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px}
+#dv button{margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 data-en="Radar: prompt builder for finding export customers">Radar: tạo prompt tìm khách hàng xuất khẩu</h1>
+    <button type="button" class="ghost lang" id="lg" title="English / Tiếng Việt" aria-label="Switch language: English / Tiếng Việt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><span id="lgt">EN</span></button>
+  </div>
+  <p class="sub" data-en="Fill in your product details. The page builds a ready-made prompt for each of the 3 steps. Copy it into ChatGPT, Gemini or Claude.">Điền thông tin sản phẩm. Trang tự tạo prompt hoàn chỉnh cho từng bước trong 3 bước. Sao chép rồi dán vào ChatGPT, Gemini hoặc Claude.</p>
+  <div class="note" data-en="AI results are for reference and simulation only. Company names, figures and contact details must be verified with official sources before use.">Kết quả AI chỉ để tham khảo và mô phỏng. Tên công ty, số liệu và thông tin liên hệ cần được kiểm chứng với nguồn chính thức trước khi dùng.</div>
+  <div class="grid">
+    <form class="card" onsubmit="return false">
+      <h2 data-en="Business information">Thông tin doanh nghiệp</h2>
+      <label for="p" data-en="Product">Sản phẩm</label><input id="p" value="Cà phê rang xay Việt Nam (specialty)">
+      <label for="m" data-en="Target market">Thị trường mục tiêu</label><input id="m" value="Nhật Bản">
+      <label for="t" data-en="Customer type">Loại khách hàng</label>
+      <select id="t"><option data-en="Importer / distributor">Nhà nhập khẩu / phân phối</option><option data-en="Retail chain / supermarket">Chuỗi bán lẻ / siêu thị</option><option data-en="Cafe, restaurant, hotel">Quán cà phê, nhà hàng, khách sạn</option><option data-en="Private-label / OEM brand">Thương hiệu tự gắn nhãn riêng (OEM)</option></select>
+      <label for="s" data-en="First shipment size">Quy mô lô hàng đầu tiên</label>
+      <select id="s"><option data-en="Small (under 1 ton)">Nhỏ (dưới 1 tấn)</option><option selected data-en="Medium (1–5 tons)">Vừa (1–5 tấn)</option><option data-en="Large (over 5 tons)">Lớn (trên 5 tấn)</option></select>
+      <label for="d" data-en="Your strengths">Điểm mạnh của bạn</label><textarea id="d" rows="3">Giá cạnh tranh, có chứng nhận HACCP, nguồn gốc rõ ràng từ Tây Nguyên</textarea>
+      <label for="c" data-en="Chosen customer (for steps 2 and 3)">Khách hàng đã chọn (cho bước 2 và 3)</label><input id="c" placeholder="">
+      <label for="k" data-en="Access code (for live AI)">Mã truy cập (cho AI thật)</label><input id="k" type="password" autocomplete="off">
+    </form>
+    <div>
+      <div class="modes" id="modes"><button type="button" data-m="demo" data-en="Demo (sample results)">Demo (kết quả mẫu)</button><button type="button" data-m="live" class="ghost" data-en="Live AI (web search)">AI thật (tìm web)</button><button type="button" data-m="prompt" class="ghost" data-en="Prompt builder">Tạo prompt</button></div>
+      <div class="card" id="dv"></div>
+      <div class="steps" id="steps">
+        <button type="button" data-n="1" data-en="1. Find customers">1. Tìm khách hàng</button>
+        <button type="button" data-n="2" class="ghost" data-en="2. Decision-makers">2. Người liên hệ</button>
+        <button type="button" data-n="3" class="ghost" data-en="3. Profile and email">3. Hồ sơ và email</button>
+      </div>
+      <div class="card">
+        <p class="hint" id="hint"></p>
+        <pre id="out"></pre>
+        <button type="button" id="cp" data-en="Copy prompt">Sao chép prompt</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let lang="vi",step=1;
+const DEF={p:["Cà phê rang xay Việt Nam (specialty)","Vietnamese specialty roasted coffee"],m:["Nhật Bản","Japan"],d:["Giá cạnh tranh, có chứng nhận HACCP, nguồn gốc rõ ràng từ Tây Nguyên","Competitive price, HACCP certified, clear Central Highlands origin"]};
+const HINT={vi:["Gửi prompt này đầu tiên. Khi AI trả về bảng khách hàng, chọn một công ty và nhập tên vào ô \"Khách hàng đã chọn\".","Gửi trong cùng cuộc trò chuyện, sau khi đã chọn công ty ở bước 1.","Gửi tiếp trong cùng cuộc trò chuyện để nhận hồ sơ và email chào hàng."],en:["Send this one first. When the AI returns the customer table, pick a company and type its name in \"Chosen customer\".","Send in the same chat, after you have chosen a company in step 1.","Send next in the same chat to get the profile and sales email."]};
+function build(){
+  const v=id=>$(id).value.trim(),c=v("c")||(lang==="en"?"[company name]":"[tên công ty]");
+  if(lang==="en"){
+    if(step===1)return `You are an export market development expert. Business: ${v("p")}, target market ${v("m")}, customer type ${v("t")}, first shipment ${v("s")}, strengths ${v("d")}. Suggest 5 potential customers as a table: company, type, city, buying signal, reason for fit, a 0-100 score on 4 criteria (demand, product fit, low barriers, ease of access), and what to verify. Do not invent contact details.`;
+    if(step===2)return `For the customer ${c}, identify 3 job titles of purchasing decision-makers to contact and suggest keywords to find them on LinkedIn. Do not give personal names, emails or phone numbers.`;
+    return `Write a one-page profile of the customer ${c}: a verdict on whether to pursue it, risks, best timing to reach out, and a list of things to verify. Then write a sales email in English under 150 words, leaving [Recipient name] as a placeholder.`;
+  }
+  if(step===1)return `Bạn là chuyên gia phát triển thị trường xuất khẩu. Doanh nghiệp: ${v("p")}, thị trường ${v("m")}, loại khách ${v("t")}, lô đầu ${v("s")}, điểm mạnh ${v("d")}. Đề xuất 5 khách hàng tiềm năng dưới dạng bảng: công ty, loại hình, thành phố, tín hiệu mua hàng, lý do phù hợp, điểm 0-100 theo 4 tiêu chí (nhu cầu, khớp sản phẩm, ít rào cản, dễ tiếp cận) và điều cần kiểm chứng. Không bịa thông tin liên hệ.`;
+  if(step===2)return `Với khách hàng ${c}, hãy xác định 3 chức danh người ra quyết định mua hàng nên liên hệ và gợi ý từ khóa tìm họ trên LinkedIn. Không đưa tên cá nhân, email hay số điện thoại.`;
+  return `Viết hồ sơ 1 trang về khách hàng ${c}: kết luận nên theo đuổi hay không, rủi ro, thời điểm liên hệ tốt nhất, danh sách việc cần xác minh. Sau đó soạn email chào hàng tiếng Anh dưới 150 từ, để [Recipient name] làm chỗ trống.`;
+}
+function render(){
+  $("out").textContent=build();
+  $("hint").textContent=HINT[lang][step-1];
+  $("c").placeholder=lang==="en"?"e.g. a company from the step 1 table":"vd: một công ty trong bảng ở bước 1";
+  document.querySelectorAll("#steps button").forEach(b=>b.className=+b.dataset.n===step?"":"ghost");
+}
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-en]").forEach(e=>{if(e.dataset.vi==null)e.dataset.vi=e.textContent;e.textContent=lang==="en"?e.dataset.en:e.dataset.vi});
+  Object.keys(DEF).forEach(k=>{const e=$(k);if(DEF[k].includes(e.value))e.value=DEF[k][lang==="en"?1:0]});
+  $("lgt").textContent=lang==="en"?"VI":"EN";
+  renderDemo();
+  render();
+}
+$("lg").onclick=()=>{lang=lang==="vi"?"en":"vi";applyLang()};
+let mode="demo",sel=-1,st=0,busy=false;
+const U={
+vi:{ban:"Dữ liệu mẫu hư cấu để minh họa quy trình (cà phê Việt Nam xuất sang Nhật). Các công ty trong demo không có thật. Dùng tab \"Tạo prompt\" để chạy với thông tin của bạn.",s1:"Bước 1: Tìm khách hàng tiềm năng",s2:"Bước 2: Tìm người liên hệ",s3:"Bước 3: Tạo hồ sơ và email",pick:"Chọn khách hàng này",chosen:"Đã chọn",sig:"Tín hiệu: ",chk:"Cần kiểm chứng: công ty có thật, nhu cầu thực tế và đầu mối liên hệ.",run:"AI đang chạy...",sc:["Nhu cầu","Khớp sản phẩm","Ít rào cản","Dễ tiếp cận"],ti:"Chức danh cần liên hệ",kw:"Từ khóa tìm trên LinkedIn",rk:"Rủi ro",tm:"Thời điểm liên hệ",tmv:"Quý này, khi họ đang tuyển dụng và lập kế hoạch nhập hàng.",em:"Email chào hàng nháp",vf:"Kiểm chứng trước khi gửi",vfl:["Công ty có thật và đang hoạt động","Chứng nhận và quy định nhập khẩu cà phê","Người liên hệ đúng chức danh"],rs:"Làm lại từ đầu"},
+en:{ban:"Fictional sample data to illustrate the workflow (Vietnamese coffee exported to Japan). The companies in this demo are not real. Use the \"Prompt builder\" tab to run it with your own details.",s1:"Step 1: Find potential customers",s2:"Step 2: Find decision-makers",s3:"Step 3: Create profile and email",pick:"Choose this customer",chosen:"Chosen",sig:"Signal: ",chk:"To verify: the company is real, actual demand, and the right contact.",run:"AI is working...",sc:["Demand","Product fit","Low barriers","Ease of access"],ti:"Job titles to contact",kw:"LinkedIn search keywords",rk:"Risks",tm:"Best timing",tmv:"This quarter, while they are hiring and planning purchases.",em:"Draft sales email",vf:"Verify before sending",vfl:["The company is real and active","Certifications and coffee import rules","The contact holds the right title"],rs:"Start over"}};
+const SAMPLE=[
+{n:"Sakura Bean Imports",c:"Osaka",t:["Nhà nhập khẩu","Importer"],sc:91,b:[23,24,21,23],sg:["Đang tuyển quản lý thu mua cà phê specialty","Hiring a specialty coffee procurement manager"],w:["Đang mở rộng dòng cà phê đơn nguồn gốc và cần nhà cung cấp mới.","Expanding its single-origin range and needs new suppliers."],ti:[["Quản lý thu mua cà phê","Coffee Procurement Manager"],["Giám đốc sản phẩm","Head of Product"],["Quản lý chất lượng","Quality Manager"]],v:["Nên theo đuổi","Pursue"],sm:["Nhu cầu rõ và đúng thời điểm; sản phẩm phù hợp phân khúc specialty.","Clear, well-timed demand; the product fits its specialty segment."],rk:["Phải có chứng nhận và kiểm định nhập khẩu thực phẩm đầy đủ.","Full food-import certification and inspection will be required."],h:"We noticed you are hiring for coffee procurement."},
+{n:"Hinode Cafe Group",c:"Tokyo",t:["Chuỗi quán cà phê","Cafe chain"],sc:84,b:[21,22,20,21],sg:["Mở thêm 12 cửa hàng trong năm nay","Opening 12 new stores this year"],w:["Cần nguồn cà phê ổn định, giá cạnh tranh cho chuỗi đang mở rộng.","Needs a stable, competitively priced supply for a growing chain."],ti:[["Giám đốc cung ứng","Supply Chain Director"],["Quản lý mua hàng","Purchasing Manager"],["Trưởng bộ phận rang xay","Head of Roasting"]],v:["Nên theo đuổi","Pursue"],sm:["Lô hàng lớn, nhưng yêu cầu nguồn cung ổn định và chất lượng đồng đều.","Large volumes, but it demands steady supply and consistent quality."],rk:["Áp lực giá từ các nhà cung cấp lớn hơn.","Price pressure from larger suppliers."],h:"We understand you are opening new stores and need reliable supply."},
+{n:"Fuji Premium Foods",c:"Nagoya",t:["Phân phối bán lẻ","Retail distributor"],sc:72,b:[18,19,17,18],sg:["Thêm cà phê vào danh mục nhãn riêng","Adding coffee to its private-label range"],w:["Quan tâm cà phê nhãn riêng nhưng chưa rõ yêu cầu chất lượng.","Interested in private-label coffee, but its quality needs are unclear."],ti:[["Quản lý danh mục đồ uống","Beverage Category Manager"],["Quản lý phát triển sản phẩm","Product Development Manager"],["Quản lý nhập khẩu","Import Manager"]],v:["Cân nhắc","Consider"],sm:["Có tiềm năng nhưng cần thêm thông tin về quy mô và tiêu chuẩn.","Promising, but more information is needed on scale and standards."],rk:["Yêu cầu bao bì và nhãn tiếng Nhật chi tiết.","Detailed Japanese packaging and labeling requirements."],h:"We saw you are adding coffee to your private-label range."}];
+let D=SAMPLE,live=false,err="",S={},lastSug="";
+function el(t,x,c){const e=document.createElement(t);if(x!=null)e.textContent=x;if(c)e.className=c;return e}
+function btn(x,fn,g){const b=el("button",x,g?"ghost":"");b.type="button";b.onclick=fn;return b}
+U.vi.banL="AI thật: Gemini + Google Search. Kết quả có thể sai, hãy mở nguồn để kiểm chứng. Cần mã truy cập do chủ trang cung cấp.";
+U.en.banL="Live AI: Gemini + Google Search. Results can be wrong, so open the sources to verify. An access code from the site owner is required.";
+U.vi.err="Lỗi: ";U.en.err="Error: ";U.vi.src="Nguồn tìm thấy";U.en.src="Sources found";
+const g=x=>Array.isArray(x)?x[lang==="en"?1:0]:x;
+async function api(stp,co){
+  const r=await fetch("/.netlify/functions/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({step:stp,lang,code:$("k").value,inputs:{product:$("p").value,market:$("m").value,type:$("t").value,size:$("s").value,strengths:$("d").value},company:co})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+  return j;
+}
+async function run(n){
+  err="";busy=true;renderDemo();
+  try{
+    if(!live){await new Promise(r=>setTimeout(r,700))}
+    else if(n===1){
+      const j=await api(1);
+      D=(j.data.leads||[]).slice(0,5).map(l=>({n:l.company,c:l.city||"",t:l.type||"",sc:+l.score||0,b:[l.demand,l.match,l.barrier,l.access].map(x=>+x||0),sg:l.signal||"",w:l.why||"",site:l.website||""}));
+      if(!D.length)throw new Error("No companies found.");
+      S[1]=j.sources;lastSug=j.suggestions;
+    }else{
+      const c=D[sel],j=await api(n,{name:c.n,city:c.c,site:c.site}),d=j.data;
+      if(n===2)Object.assign(c,{ti:d.titles||[],kw:d.keywords||[]});
+      else Object.assign(c,{v:d.verdict||"",sm:d.summary||"",rk:(d.risks||[]).join(" "),tm:d.timing||"",em:d.email||{},vf:d.verify||[]});
+      S[n]=j.sources;lastSug=j.suggestions;
+    }
+    st=n;
+  }catch(e){err=e.message}
+  busy=false;renderDemo();
+}
+function srcs(a){
+  const s=el("div",null,"sec");s.append(el("h3",U[lang].src));
+  (a||[]).slice(0,8).forEach(x=>{if(!/^https:\/\//.test(x.uri))return;const p=el("div",null,"tag"),l=el("a",x.title||x.uri);l.href=x.uri;l.target="_blank";l.rel="noopener noreferrer";p.append(l);s.append(p)});
+  return s}
+function sugg(h){const f=document.createElement("iframe");if(h){f.sandbox="allow-popups";f.srcdoc=h;f.style.cssText="border:0;width:100%;height:64px"}else f.hidden=true;return f}
+function list(h,arr){const s=el("div",null,"sec"),u=el("ul");arr.forEach(x=>u.append(el("li",x)));s.append(el("h3",h),u);return s}
+function emailText(c){
+  if(live){const m=c.em||{};return "Subject: "+(m.subject||"")+"\n\n"+(m.body||"")}
+  return "Subject: Specialty Vietnamese coffee for "+c.n+"\n\nDear [Recipient name],\n\nI am writing from a HACCP-certified Vietnamese specialty coffee roaster in the Central Highlands. "+c.h+" We offer competitive pricing, traceable single-origin lots and a trial shipment of 1–5 tons.\n\nWould you be open to a short call or to receiving samples?\n\nBest regards,\n[Your name]"}
+function renderDemo(){
+  const u=U[lang],d=$("dv");
+  d.replaceChildren(el("div",live?u.banL:u.ban,"note"));
+  if(err)d.append(el("div",u.err+err,"chk"));
+  if(busy){d.append(el("p",u.run,"tag"));return}
+  if(st===0){d.append(btn(u.s1,()=>run(1)));return}
+  D.forEach((c,k)=>{
+    if(st>1&&k!==sel)return;
+    const w=el("div",null,"lead"),r=el("div",null,"row"),L=el("div");
+    L.append(el("b",c.n),el("div",g(c.t)+" · "+c.c,"tag"));r.append(L,el("div",c.sc,"score"));
+    const bs=el("div",null,"bars");
+    u.sc.forEach((n,j)=>{const x=el("div",n),q=el("i"),f=el("u");f.style.width=Math.min(100,c.b[j]*4)+"%";q.append(f);x.append(q);bs.append(x)});
+    w.append(r,el("div",u.sig+g(c.sg),"tag"),el("p",g(c.w)),bs,el("div",u.chk,"chk"));
+    if(st===1)w.append(btn(sel===k?u.chosen:u.pick,()=>{sel=k;renderDemo()},sel!==k));
+    d.append(w)});
+  if(live&&st===1)d.append(srcs(S[1]));
+  const c=D[sel];
+  if(st===1&&sel>=0)d.append(btn(u.s2,()=>run(2)));
+  if(st>=2){
+    d.append(list(u.ti,c.ti.map(g)),list(u.kw,c.kw||c.ti.map(x=>x[1]+" "+c.n)));
+    if(live)d.append(srcs(S[2]));
+    if(st===2)d.append(btn(u.s3,()=>run(3)))}
+  if(st>=3){
+    const e=el("div",null,"sec"),m=el("div",null,"sec"),em=el("div",null,"sec");
+    e.append(el("div",g(c.v),"verdict"),el("p",g(c.sm)));
+    m.append(el("h3",u.tm),el("div",live?c.tm:u.tmv));
+    em.append(el("h3",u.em),el("div",emailText(c),"email"));
+    d.append(e,list(u.rk,[g(c.rk)]),m,em,list(u.vf,live?c.vf:u.vfl));
+    if(live)d.append(srcs(S[3]))}
+  if(live)d.append(sugg(lastSug));
+  d.append(btn(u.rs,()=>{st=0;sel=-1;err="";if(live)D=[];renderDemo()},true));
+}
+function setMode(m){
+  mode=m;live=m==="live";const pc=$("hint").parentElement,p=m==="prompt";
+  $("dv").hidden=p;$("steps").hidden=pc.hidden=!p;
+  document.querySelectorAll("#modes button").forEach(b=>b.className=b.dataset.m===m?"":"ghost");
+  if(!p){st=0;sel=-1;err="";D=live?[]:SAMPLE;renderDemo()}
+}
+document.querySelectorAll("#modes button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+renderDemo();setMode("demo");
+document.querySelectorAll("#steps button").forEach(b=>b.onclick=()=>{step=+b.dataset.n;render()});
+document.querySelectorAll("input,select,textarea").forEach(e=>e.addEventListener("input",render));
+$("cp").onclick=async()=>{
+  const b=$("cp"),txt=$("out").textContent;
+  try{await navigator.clipboard.writeText(txt)}catch(e){const r=document.createRange();r.selectNodeContents($("out"));const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand("copy")}
+  const old=b.textContent;b.textContent=lang==="en"?"Copied!":"Đã sao chép!";setTimeout(()=>b.textContent=old,1500);
+};
+render();
+</script>
+</body>
+</html>
