@@ -12,7 +12,7 @@ function buildCore(step, lang, i, co, results) {
   const base = `You are an export market development assistant. ${src} Write all values in ${L} (the sales email is always in English). Only name companies that appear in your search results; never invent companies, websites, people, emails or phone numbers. If unsure, return fewer items. Return ONLY valid JSON, no markdown.`;
   const ctx = `Exporter: product=${i.product}; target market=${i.market}; buyer type=${i.type}; first shipment=${i.size}; strengths=${i.strengths}.`;
   const who = `Target company: ${co.name} (${co.city}) ${co.site}.`;
-  if (step === 1) return `${base}\n${ctx}\nFind up to 5 real companies in the target market that could buy this product. JSON: {"leads":[{"company":"","type":"","city":"","website":"official site found in search","signal":"recent buying signal found","why":"1-2 sentences","score":0-100,"demand":0-25,"match":0-25,"barrier":0-25,"access":0-25,"check":"what to verify"}]}. For "barrier", a higher number means fewer regulatory barriers. Sort by score, highest first.`;
+  if (step === 1) return `${base}\n${ctx}\nFind up to 5 real companies in the target market that could buy this product. JSON: {"leads":[{"company":"","type":"","city":"","website":"official site found in search","signal":"recent buying signal found","why":"1-2 sentences","score":0-100,"demand":0-25,"match":0-25,"barrier":0-25,"access":0-25,"check":"what to verify","source_ids":[numbers of the SEARCH RESULTS you used for this company, e.g. 1,4]}]}. Each company must cite at least one source_id; the numbers refer to the [n] items in SEARCH RESULTS (use [] if no SEARCH RESULTS are given). For "barrier", a higher number means fewer regulatory barriers. Sort by score, highest first.`;
   if (step === 2) return `${base}\n${ctx}\n${who}\nUsing search results about this company, list 3 job titles of the people who decide on purchasing this product, and 3 LinkedIn search keyword phrases to find them. Do not give personal names, emails or phone numbers. JSON: {"titles":["","",""],"keywords":["","",""]}`;
   return `${base}\n${ctx}\n${who}\nProfile this company from search results (recent news, products, sourcing, certifications). JSON: {"verdict":"one of: Pursue / Consider / Not a fit (in ${L})","summary":"3 sentences","risks":["",""],"timing":"best timing to reach out","email":{"subject":"","body":"sales email in English, under 150 words, with [Recipient name] as placeholder"},"verify":["things to verify before sending"]}`;
 }
@@ -32,12 +32,28 @@ async function webSearch(q, key) {
   });
   if (!r.ok) throw new Error("search " + r.status);
   const j = await r.json();
-  return (j.results || []).map((x) => ({ title: clip(x.title, 150), uri: x.url, text: clip(x.content, 500) }));
+  return (j.results || []).map((x) => ({ title: clip(x.title, 150), uri: x.url, text: clip(x.content, 600) }));
 }
 function searchQuery(step, i, co) {
   if (step === 1) return `${i.product} importers distributors buyers ${i.market}`;
   if (step === 2) return `${co.name} ${co.city} purchasing procurement manager buyer`;
   return `${co.name} ${co.city} products sourcing certifications news`;
+}
+
+// Step 1 only: turn the (possibly Vietnamese) inputs into English search queries.
+async function makeQueries(key, i) {
+  const text = `Turn this into 2 short English web search queries (max 8 words each) to find real companies that could BUY the product in the target market. Product: ${i.product}. Target market: ${i.market}. Buyer type: ${i.type}. Return ONLY JSON: {"queries":["",""]}`;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify({ contents: [{ parts: [{ text }] }], generationConfig: { temperature: 0 } }),
+  });
+  if (!r.ok) throw new Error("q");
+  const j = await r.json();
+  const t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map((p) => p.text || "").join("");
+  const q = (parseJson(t).queries || []).filter((x) => typeof x === "string").slice(0, 2).map((x) => clip(x, 120));
+  if (!q.length) throw new Error("q");
+  return q;
 }
 
 function parseJson(t) {
@@ -75,7 +91,15 @@ exports.handler = async (event) => {
   const tk = process.env.TAVILY_API_KEY;
   let results = null;
   try {
-    if (tk) results = await webSearch(searchQuery(step, i, co), tk);
+    if (tk) {
+      let qs = [searchQuery(step, i, co)];
+      if (step === 1) { try { qs = await makeQueries(key, i); } catch (e) { /* fall back to the plain query */ } }
+      const lists = await Promise.all(qs.map((q) => webSearch(q, tk)));
+      const seen = new Set();
+      results = [];
+      lists.flat().forEach((x) => { if (!seen.has(x.uri)) { seen.add(x.uri); results.push(x); } });
+      results = results.slice(0, 10);
+    }
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
@@ -91,7 +115,18 @@ exports.handler = async (event) => {
     const text = ((cand && cand.content && cand.content.parts) || []).map((p) => p.text || "").join("");
     const gm = (cand && cand.groundingMetadata) || {};
     const sources = results ? results.map((w) => ({ uri: w.uri, title: w.title })) : (gm.groundingChunks || []).map((x) => x.web).filter(Boolean).map((w) => ({ uri: w.uri, title: w.title }));
-    return reply(200, { data: parseJson(text), sources, suggestions: (gm.searchEntryPoint || {}).renderedContent || "" });
+    let data = parseJson(text);
+    if (step === 1 && !Array.isArray(data.leads)) {
+      const k = Object.keys(data).find((x) => Array.isArray(data[x]));
+      data = { leads: k ? data[k] : [] };
+    }
+    if (step === 1 && results) {
+      data.leads.forEach((l) => {
+        const ids = Array.isArray(l.source_ids) ? l.source_ids.map(Number) : [];
+        l.sources = [...new Set(ids)].filter((n) => Number.isInteger(n) && n >= 1 && n <= results.length).slice(0, 3).map((n) => ({ uri: results[n - 1].uri, title: results[n - 1].title }));
+      });
+    }
+    return reply(200, { data, sources, suggestions: (gm.searchEntryPoint || {}).renderedContent || "" });
   } catch (e) {
     if (String(e.message).startsWith("search")) return reply(502, { error: `Web search failed (${e.message}). Check TAVILY_API_KEY or its free quota.` });
     return reply(500, { error: "Could not read the AI response. Please try again." });
