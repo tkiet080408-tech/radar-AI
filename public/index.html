@@ -129,6 +129,7 @@ function btn(x,fn,g){const b=el("button",x,g?"ghost":"");b.type="button";b.oncli
 U.vi.banL="AI thật: tìm kiếm web kết hợp Gemini. Kết quả có thể sai, hãy mở nguồn để kiểm chứng. Đây là gói miễn phí nên có thể tạm hết lượt.";
 U.en.banL="Live AI: web search plus Gemini. Results can be wrong, so open the sources to verify. This uses free plans, so it may run out of quota.";
 U.vi.err="Lỗi: ";U.en.err="Error: ";U.vi.src="Nguồn tìm thấy";U.en.src="Sources found";
+U.vi.srcl="Nguồn: ";U.en.srcl="Sources: ";U.vi.nosrc="chưa có nguồn riêng, xem danh sách nguồn chung bên dưới";U.en.nosrc="no specific source, see the general list below";
 U.vi.none="Chưa tìm thấy công ty phù hợp từ kết quả tìm kiếm. Hãy bấm lại hoặc thử ghi sản phẩm và thị trường rõ hơn.";U.en.none="No suitable companies were found in the search results. Try again or describe the product and market more clearly.";
 U.vi.quota="AI thật tạm thời hết lượt miễn phí. Mời dùng chế độ Demo mẫu hoặc thử lại sau.";U.en.quota="Live AI has run out of its free quota for now. Please use the Demo mode or try again later.";
 const g=x=>Array.isArray(x)?x[lang==="en"?1:0]:x;
@@ -144,7 +145,7 @@ async function run(n){
     if(!live){await new Promise(r=>setTimeout(r,700))}
     else if(n===1){
       const j=await api(1);
-      D=(j.data.leads||j.data.companies||[]).slice(0,5).map(l=>({n:l.company,c:l.city||"",t:l.type||"",sc:+l.score||0,b:[l.demand,l.match,l.barrier,l.access].map(x=>+x||0),sg:l.signal||"",w:l.why||"",site:l.website||""}));
+      D=(j.data.leads||j.data.companies||[]).slice(0,5).map(l=>({n:l.company,c:l.city||"",t:l.type||"",sc:+l.score||0,b:[l.demand,l.match,l.barrier,l.access].map(x=>+x||0),sg:l.signal||"",w:l.why||"",site:l.website||"",src:l.sources||[]}));
       if(!D.length)throw new Error(U[lang].none);
       S[1]=j.sources;lastSug=j.suggestions;
     }else{
@@ -166,6 +167,14 @@ function list(h,arr){const s=el("div",null,"sec"),u=el("ul");arr.forEach(x=>u.ap
 function emailText(c){
   if(live){const m=c.em||{};return "Subject: "+(m.subject||"")+"\n\n"+(m.body||"")}
   return "Subject: Specialty Vietnamese coffee for "+c.n+"\n\nDear [Recipient name],\n\nI am writing from a HACCP-certified Vietnamese specialty coffee roaster in the Central Highlands. "+c.h+" We offer competitive pricing, traceable single-origin lots and a trial shipment of 1–5 tons.\n\nWould you be open to a short call or to receiving samples?\n\nBest regards,\n[Your name]"}
+function srcLine(c){
+  const d=el("div",null,"tag"),L=[];
+  if(/^https:\/\//.test(c.site||""))L.push({u:c.site,t:"Website"});
+  (c.src||[]).forEach(x=>{if(/^https:\/\//.test(x.uri))L.push({u:x.uri,t:x.title||x.uri})});
+  d.append(document.createTextNode(U[lang].srcl));
+  if(!L.length){d.append(document.createTextNode(U[lang].nosrc));return d}
+  L.slice(0,4).forEach((x,k)=>{if(k)d.append(document.createTextNode(" · "));const a=el("a",x.t.length>48?x.t.slice(0,47)+"…":x.t);a.href=x.u;a.target="_blank";a.rel="noopener noreferrer";d.append(a)});
+  return d}
 function renderDemo(){
   const u=U[lang],d=$("dv");
   d.replaceChildren(el("div",live?u.banL:u.ban,"note"));
@@ -178,7 +187,7 @@ function renderDemo(){
     L.append(el("b",c.n),el("div",g(c.t)+" · "+c.c,"tag"));r.append(L,el("div",c.sc,"score"));
     const bs=el("div",null,"bars");
     u.sc.forEach((n,j)=>{const x=el("div",n),q=el("i"),f=el("u");f.style.width=Math.min(100,c.b[j]*4)+"%";q.append(f);x.append(q);bs.append(x)});
-    w.append(r,el("div",u.sig+g(c.sg),"tag"),el("p",g(c.w)),bs,el("div",u.chk,"chk"));
+    w.append(r,el("div",u.sig+g(c.sg),"tag"),el("p",g(c.w)),bs,el("div",u.chk,"chk"),...(live?[srcLine(c)]:[]));
     if(st===1)w.append(btn(sel===k?u.chosen:u.pick,()=>{sel=k;renderDemo()},sel!==k));
     d.append(w)});
   if(live&&st===1)d.append(srcs(S[1]));
